@@ -1,54 +1,53 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { getAllMenuItems, createMenuItem } from "@/lib/services/menu.service"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-
-    const { data: menuItems, error } = await supabase.from("menu_items").select("*").order("category").order("name")
-
-    if (error) throw error
-
-    return NextResponse.json(menuItems || [])
+    const menuItems = await getAllMenuItems()
+    return NextResponse.json(menuItems)
   } catch (error) {
-    console.error("[v0] Menu route error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    console.error("[v0] Menu GET error:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const newItem = await request.json()
+    const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("menu_items")
-      .insert({
-        name: newItem.name,
-        description: newItem.description,
-        price: newItem.price,
-        category: newItem.category,
-        available: newItem.available ?? true,
-        image_url: newItem.image_url,
-      })
-      .select()
-      .single()
+    if (
+      !body.name ||
+      !body.category ||
+      typeof body.price !== "number"
+    ) {
+      return NextResponse.json({ error: "Données invalides" }, { status: 400 })
+    }
 
-    if (error) throw error
+    const createdItem = await createMenuItem({
+      name: body.name,
+      description: body.description || "",
+      price: body.price,
+      category: body.category,
+      available: body.available ?? true,
+    })
 
-    return NextResponse.json(data, { status: 201 })
+    return NextResponse.json(createdItem, { status: 201 })
   } catch (error) {
     console.error("[v0] Menu POST error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    )
   }
 }

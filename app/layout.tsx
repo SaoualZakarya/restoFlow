@@ -5,14 +5,14 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { LayoutContent } from "@/components/layout-content"
+import { useMounted } from "@/hooks/useMounted"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "RestoFlow - Gestion de Restaurant",
-  description: "Application de gestion complète pour restaurants",
-  generator: "v0.app",
+  description: "Application de gestion complète pour restaurants"
 }
 
 export default function RootLayout({
@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr">
-      <body className={`font-sans antialiased`}>
+    <html lang="fr" >
+      <body className={`font-sans antialiased`} suppressHydrationWarning={true} >
         <AuthProvider>
           <LayoutContent>{children}</LayoutContent>
         </AuthProvider>

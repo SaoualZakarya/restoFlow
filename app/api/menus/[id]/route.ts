@@ -1,41 +1,45 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { mockMenuItems } from "@/lib/mock-data"
+import { updateMenuItem, deleteMenuItem } from "@/lib/services/menu.service"
 
-let menuItems = [...mockMenuItems]
-
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest) {
+  const reqUrl = new URL(request.url)
+    const pathname = reqUrl.pathname // e.g. "/api/menus/2c8e06b3-9721-4be4-8632-56f0a7c44db4"
+    
+    // Extract the last part as ID
+    const id = pathname.split("/").pop()
+    if (!id) {
+      return NextResponse.json({ error: "ID manquant" }, { status: 400 })
+    }
   try {
     const updates = await request.json()
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    const index = menuItems.findIndex((m) => m.id === params.id)
-
-    if (index === -1) {
-      return NextResponse.json({ error: "Item non trouvé" }, { status: 404 })
-    }
-
-    menuItems[index] = {
-      ...menuItems[index],
-      ...updates,
-    }
-
-    return NextResponse.json(menuItems[index])
+    console.log("updates",updates)
+    const updatedItem = await updateMenuItem(id, updates)
+    return NextResponse.json(updatedItem)
   } catch (error) {
     console.error("[v0] Menu PUT error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur" }, { status: 500 })
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest) {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    // Parse the URL
+    const reqUrl = new URL(request.url)
+    const pathname = reqUrl.pathname // e.g. "/api/menus/2c8e06b3-9721-4be4-8632-56f0a7c44db4"
+    
+    // Extract the last part as ID
+    const id = pathname.split("/").pop()
+    if (!id) {
+      return NextResponse.json({ error: "ID manquant" }, { status: 400 })
+    }
 
-    menuItems = menuItems.filter((m) => m.id !== params.id)
+    console.log("DELETE ID from URL:", id)
+    await deleteMenuItem(id)
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Menu DELETE error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur" }, { status: 500 })
   }
 }
+

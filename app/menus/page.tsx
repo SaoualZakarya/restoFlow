@@ -22,7 +22,7 @@ export default function MenusPage() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [formData, setFormData] = useState({
     name: "",
-    category: "entrée" as MenuItem["category"],
+    category: "Entrée" as MenuItem["category"],
     price: "",
     description: "",
     available: true,
@@ -112,14 +112,14 @@ export default function MenusPage() {
     })
   }
 
-  const groupedItems = menuItems.reduce(
-    (acc, item) => {
+  const groupedItems = Array.isArray(menuItems)
+  ? menuItems.reduce((acc, item) => {
       if (!acc[item.category]) acc[item.category] = []
       acc[item.category].push(item)
       return acc
-    },
-    {} as Record<string, MenuItem[]>,
-  )
+    }, {} as Record<string, MenuItem[]>)
+  : {}
+
 
   const categoryLabels = {
     entrée: "Entrées",
