@@ -41,7 +41,6 @@ export default function CommandesPage() {
         total: order.total,
         createdAt: order.created_at,
         updatedAt: order.updated_at,
-        serverName: "Serveur", // Will be populated from profile
         items:
           order.order_items?.map((item: any) => ({
             menuItemId: item.menu_item_id,
@@ -84,7 +83,6 @@ export default function CommandesPage() {
         total: updated.total,
         createdAt: updated.created_at,
         updatedAt: updated.updated_at,
-        serverName: "Serveur",
         items:
           updated.order_items?.map((item: any) => ({
             menuItemId: item.menu_item_id,
@@ -373,7 +371,7 @@ export default function CommandesPage() {
                 {getStatusBadge(order.status)}
               </div>
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{order.id}</span>
+                <span>{order.tableNumber}</span>
                 <span>
                   {new Date(order.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                 </span>
@@ -384,7 +382,7 @@ export default function CommandesPage() {
                 {order.items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
                     <span className="text-card-foreground">
-                      {item.quantity}x {item.menuItemName}
+                      {item.quantity} x {item.menuItemName}
                     </span>
                     <span className="font-medium text-primary">{(item.price * item.quantity).toFixed(2)} €</span>
                   </div>

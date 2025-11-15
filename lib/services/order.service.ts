@@ -23,7 +23,7 @@ export async function getAllOrders(): Promise<Order[]> {
   
   if (error) throw new Error(error.message)
   
-  return (orders || []).map(order => ({
+  const orderDone = (orders || []).map(order => ({
     ...order,
     items: order.order_items?.map((item: any) => ({
       menuItemId: item.menu_item_id,
@@ -37,6 +37,8 @@ export async function getAllOrders(): Promise<Order[]> {
     tableNumber: order.table_number,
     serverName: order.server_name,
   }))
+
+  return orderDone
 }
 
 export async function getOrderById(id: string): Promise<Order | null> {

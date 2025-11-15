@@ -1,29 +1,29 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { mockOrders } from "@/lib/mock-data"
-
-const orders = [...mockOrders]
+import { getAllOrders, createOrder } from "@/lib/services/order.service"
 
 export async function GET() {
-  await new Promise((resolve) => setTimeout(resolve, 300))
-  return NextResponse.json(orders)
+  try {
+    const orders = await getAllOrders()
+    return NextResponse.json(orders)
+  } catch (error) {
+    console.error("Order GET error:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    )
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const newOrder = await request.json()
-
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  const order = {
-    id: String(Date.now()),
-    tableNumber: newOrder.tableNumber,
-    items: newOrder.items,
-    status: newOrder.status || "en attente",
-    total: newOrder.total,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    serverName: "Jean Serveur",
+  try {
+    const newOrder = await request.json()
+    const createdOrder = await createOrder(newOrder)
+    return NextResponse.json(createdOrder, { status: 201 })
+  } catch (error) {
+    console.error("[v0] Order POST error:", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    )
   }
-
-  orders.unshift(order)
-  return NextResponse.json(order, { status: 201 })
 }
