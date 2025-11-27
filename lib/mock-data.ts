@@ -109,51 +109,6 @@ export const mockMenuItems: MenuItem[] = [
   },
 ]
 
-// Mock Orders
-export const mockOrders: Order[] = [
-  {
-    id: "1",
-    tableNumber: 5,
-    items: [
-      { menuItemId: "1", menuItemName: "Salade César", quantity: 2, price: 8.5 },
-      { menuItemId: "3", menuItemName: "Steak Frites", quantity: 2, price: 18.5 },
-      { menuItemId: "8", menuItemName: "Coca-Cola", quantity: 2, price: 3.0 },
-    ],
-    status: "en préparation",
-    total: 60.0,
-    createdAt: new Date("2025-01-07T12:30:00"),
-    updatedAt: new Date("2025-01-07T12:35:00"),
-    serverName: "Jean Serveur",
-  },
-  {
-    id: "2",
-    tableNumber: 3,
-    items: [
-      { menuItemId: "2", menuItemName: "Soupe à l'oignon", quantity: 1, price: 6.5 },
-      { menuItemId: "4", menuItemName: "Saumon Grillé", quantity: 1, price: 22.0 },
-      { menuItemId: "6", menuItemName: "Tiramisu", quantity: 1, price: 6.5 },
-    ],
-    status: "prêt",
-    total: 35.0,
-    createdAt: new Date("2025-01-07T13:00:00"),
-    updatedAt: new Date("2025-01-07T13:25:00"),
-    serverName: "Jean Serveur",
-  },
-  {
-    id: "3",
-    tableNumber: 7,
-    items: [
-      { menuItemId: "5", menuItemName: "Pizza Margherita", quantity: 1, price: 12.0 },
-      { menuItemId: "10", menuItemName: "Eau Minérale", quantity: 1, price: 2.5 },
-    ],
-    status: "en attente",
-    total: 14.5,
-    createdAt: new Date("2025-01-07T13:45:00"),
-    updatedAt: new Date("2025-01-07T13:45:00"),
-    serverName: "Jean Serveur",
-  },
-]
-
 // Mock Reservations
 export const mockReservations: Reservation[] = [
   {

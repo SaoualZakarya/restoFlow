@@ -45,30 +45,67 @@ export default function ReservationsPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+const [availableTables, setAvailableTables] = useState<number[]>([1,2,3,4,5,6,7,8,9,10]);
 
-    const reservationData = {
-      ...formData,
-      numberOfGuests: Number.parseInt(formData.numberOfGuests),
-      tableNumber: formData.tableNumber ? Number.parseInt(formData.tableNumber) : undefined,
-      status: "confirmée" as const,
-    }
-
-    try {
-      const response = await fetch("/api/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reservationData),
-      })
-      const newReservation = await response.json()
-      setReservations([...reservations, newReservation])
-      setIsDialogOpen(false)
-      resetForm()
-    } catch (error) {
-      console.error("Erreur lors de la création:", error)
-    }
+const updateAvailableTables = () => {
+  if (!formData.date || !formData.time) {
+    setAvailableTables([1,2,3,4,5,6,7,8,9,10]);
+    return;
   }
+
+  const bookedTables = reservations
+    .filter(r => r.date === formData.date && r.time === formData.time)
+    .map(r => r.tableNumber)
+    .filter(Boolean) as number[];
+
+  const allTables = [1,2,3,4,5,6,7,8,9,10];
+  setAvailableTables(allTables.filter(t => !bookedTables.includes(t)));
+};
+
+useEffect(() => {
+  updateAvailableTables();
+}, [formData.date, formData.time, reservations]);
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+
+  const reservationData = {
+  ...formData,
+  numberOfGuests: Number.parseInt(formData.numberOfGuests),
+  tableNumber: formData.tableNumber ? Number.parseInt(formData.tableNumber) : undefined,
+  status: "en attente" as const,
+  }
+
+  try {
+  const response = await fetch("/api/reservations", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(reservationData),
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    // Handle conflict (table already reserved)
+    if (response.status === 409) {
+      alert(result.error) // You can replace this with a prettier UI notification
+    } else {
+      alert("Erreur lors de la création de la réservation")
+    }
+    return
+  }
+
+  setReservations([...reservations, result])
+  setIsDialogOpen(false)
+  resetForm()
+
+  } catch (error) {
+  console.error("Erreur lors de la création:", error)
+  alert("Erreur serveur")
+  }
+  }
+
 
   const updateStatus = async (id: string, status: Reservation["status"]) => {
     try {
@@ -199,12 +236,25 @@ export default function ReservationsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tableNumber">Table (optionnel)</Label>
-                  <Input
-                    id="tableNumber"
-                    type="number"
+                  <Select
                     value={formData.tableNumber}
-                    onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
-                  />
+                    onValueChange={value => setFormData({ ...formData, tableNumber: value })}
+                    disabled={availableTables.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        availableTables.length ? "Choisir une table" : "Toutes les tables réservées"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTables.map(t => (
+                        <SelectItem key={t} value={String(t)}>
+                          Table {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                 </div>
               </div>
               <div className="space-y-2">

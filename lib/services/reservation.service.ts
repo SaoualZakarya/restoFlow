@@ -1,4 +1,3 @@
-// lib/services/reservation.service.ts
 "use server"
 
 import { createClient } from "@/lib/supabase/server"

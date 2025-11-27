@@ -1,49 +1,68 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { mockReservations } from "@/lib/mock-data"
+import {
+getAllReservations,
+createReservation
+} from '@/lib/services/reservation.service'
 
-const reservations = [...mockReservations]
-
+// GET /api/reservations
 export async function GET() {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 300))
+try {
+const reservations = await getAllReservations()
 
-    const sorted = [...reservations].sort((a, b) => {
-      if (a.date !== b.date) {
-        return b.date.getTime() - a.date.getTime()
-      }
-      return b.time.localeCompare(a.time)
-    })
-
-    return NextResponse.json(sorted)
-  } catch (error) {
-    console.error("[v0] Reservations route error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+// Sort by date then time ascending
+const sorted = reservations.sort((a, b) => {
+  if (a.date.getTime() !== b.date.getTime()) {
+    return a.date.getTime() - b.date.getTime()
   }
+  return a.time.localeCompare(b.time)
+})
+
+return NextResponse.json(sorted)
+} catch (error) {
+console.error("[v0] Reservations GET error:", error)
+return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+}
 }
 
+// POST /api/reservations
+// POST /api/reservations
 export async function POST(request: NextRequest) {
-  try {
-    const newReservation = await request.json()
+try {
+const newReservation = await request.json()
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
+// Validate required fields
+if (!newReservation.customerName || !newReservation.date || !newReservation.time || !newReservation.tableNumber) {
+  return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 })
+}
 
-    const reservation = {
-      id: String(Date.now()),
-      customerName: newReservation.customerName,
-      customerPhone: newReservation.customerPhone,
-      customerEmail: newReservation.customerEmail,
-      date: new Date(newReservation.date),
-      time: newReservation.time,
-      numberOfGuests: newReservation.numberOfGuests,
-      tableNumber: newReservation.tableNumber,
-      status: newReservation.status || "confirmée",
-      notes: newReservation.notes,
-    }
+// Check if the table is already reserved for the same date and time
+const allReservations = await getAllReservations()
+const isTaken = allReservations.some(r =>
+  r.tableNumber === newReservation.tableNumber &&
+  r.date.toISOString().split('T')[0] === new Date(newReservation.date).toISOString().split('T')[0] &&
+  r.time === newReservation.time
+)
 
-    reservations.unshift(reservation)
-    return NextResponse.json(reservation, { status: 201 })
-  } catch (error) {
-    console.error("[v0] Reservations POST error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
-  }
+if (isTaken) {
+  return NextResponse.json({ error: `Table ${newReservation.tableNumber} déjà réservée à cette date et heure` }, { status: 409 })
+}
+
+const reservation = await createReservation({
+  customerName: newReservation.customerName,
+  customerPhone: newReservation.customerPhone,
+  customerEmail: newReservation.customerEmail,
+  date: new Date(newReservation.date),
+  time: newReservation.time,
+  numberOfGuests: newReservation.numberOfGuests,
+  tableNumber: newReservation.tableNumber,
+  status: newReservation.status || "confirmée",
+  notes: newReservation.notes,
+})
+
+return NextResponse.json(reservation, { status: 201 })
+
+} catch (error) {
+console.error("[v0] Reservations POST error:", error)
+return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
+}
 }

@@ -1,42 +1,42 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { mockReservations } from "@/lib/mock-data"
+import { updateReservation, deleteReservation, getReservationById } from "@/lib/services/reservation.service"
 
-let reservations = [...mockReservations]
-
+// PUT /api/reservations/:id
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const updates = await request.json()
+try {
+const updates = await request.json()
+const updatedReservation = await updateReservation(params.id, {
+customerName: updates.customerName,
+customerPhone: updates.customerPhone,
+customerEmail: updates.customerEmail,
+date: updates.date ? new Date(updates.date) : undefined,
+time: updates.time,
+numberOfGuests: updates.numberOfGuests,
+tableNumber: updates.tableNumber,
+status: updates.status,
+notes: updates.notes,
+})
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
+return NextResponse.json(updatedReservation)
 
-    const index = reservations.findIndex((r) => r.id === params.id)
-
-    if (index === -1) {
-      return NextResponse.json({ error: "Réservation non trouvée" }, { status: 404 })
-    }
-
-    reservations[index] = {
-      ...reservations[index],
-      ...updates,
-      date: updates.date ? new Date(updates.date) : reservations[index].date,
-    }
-
-    return NextResponse.json(reservations[index])
-  } catch (error) {
-    console.error("[v0] Reservation PUT error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
-  }
+} catch (error) {
+console.error(" Reservation PUT error:", error)
+return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur" }, { status: 500 })
+}
 }
 
+// DELETE /api/reservations/:id
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 300))
+try {
+const reservation = await getReservationById(params.id)
+if (!reservation) {
+return NextResponse.json({ error: "Réservation non trouvée" }, { status: 404 })
+}
 
-    reservations = reservations.filter((r) => r.id !== params.id)
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("[v0] Reservation DELETE error:", error)
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
-  }
+await deleteReservation(params.id)
+return NextResponse.json({ success: true })
+} catch (error) {
+console.error(" Reservation DELETE error:", error)
+return NextResponse.json({ error: error instanceof Error ? error.message : "Erreur serveur" }, { status: 500 })
+}
 }
